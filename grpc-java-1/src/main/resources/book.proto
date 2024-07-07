@@ -1,0 +1,112 @@
+syntax = "proto3"; /* default is proto2 */
+import "google/protobuf/field_mask.proto";
+
+/* If no explicit java_package option is given in the .proto file, then by default the proto package
+(specified using the “package” keyword) will be used */
+option java_package = "com.koderme.grpc.proto.book";
+
+service BookService{
+  /* *
+   * rpc methods send request/s and get response/s that are define in code as messages.
+   * When we want multiple request/responses we will use the key word stream in front of the parameter
+   * */
+
+  rpc getBooks(BooksRequest) returns (stream BookResponse);
+  rpc getBook(BookRequest) returns (BookResponse);
+  rpc setBook(Book) returns(Empty);
+
+  rpc getPages(PagesRequest) returns (stream PageResponse);
+  rpc getPage(PageRequest) returns (PageResponse);
+  rpc setPage(Page) returns(Empty);
+  rpc setPages(stream Page) returns (Empty);
+}
+
+message Book {
+  int32 id = 1;
+  string title = 2;
+  int32 total_pages = 3;
+  string publisher = 4;
+  string author = 5;
+  Genre genre = 6;
+  repeated Page pages = 7;
+}
+
+message  BookRequest{
+  /* Not defined yet */
+}
+
+message BooksRequest{
+  /* Pagination */
+  int32 first_book = 1;
+  int32 last_book = 2;
+
+  /* Filters */
+  BookFilters bookFilters = 3;
+
+  /* *
+   * Fields wanted
+   * Please read official documentation and watch that useful tutorial:
+   * https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.FieldMask
+   * https://pinkiepractices.com/posts/protobuf-field-masks/
+   * Ex: if we request
+   *  "field_mask": {
+   *     "paths": [
+   *       "id",
+   *       "title"
+   *   ]
+   * }
+   * We receive values only for the mentioned fields (id and title).
+   * */
+  google.protobuf.FieldMask field_mask = 4;
+}
+
+message BookFilters {
+  int32  id = 1;
+  string title = 2;
+  string publisher = 3;
+  string author = 4;
+  Genre genre = 5;
+}
+
+message BookResponse {
+  Book book = 1;
+}
+
+/* We can define an enum in message and declare the field either below or above the enum */
+enum Genre{
+  /* Commenting the line below will cause a compile error inside Google and a warning message outside */
+  option allow_alias = true; /* Only with this option we can use alias,
+    ex: SF and SCIENCE_FICTION have assigned the same value, 4 */
+  ACTION = 0; /* Start with zero to keep backward compatibility with proto2 */
+  HORROR = 1;
+  DRAMA = 2;
+  LOVE = 3;
+  SF = 4;
+  SCIENCE_FICTION = 4;
+};
+
+message Page {
+  int32 id = 1;
+  int32 book_id = 2;
+  int32 page_number = 3;
+  string content = 4;
+}
+
+message PageRequest {
+  int32 id = 1;
+  int32 book_id = 2;
+  int32 page_number = 3;
+}
+
+message PagesRequest {
+  /* Not defined yet */
+}
+
+message PageResponse {
+  Page page = 1;
+}
+
+/* Equivalent of Null or Void for rpc functions */
+message Empty {
+  /* EMPTY */
+}
